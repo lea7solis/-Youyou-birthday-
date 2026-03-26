@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mission Youcef 🍥</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:Orbitron;text-align:center;background:#000;}
+
+/* VIDEO BACKGROUND */
+#birthdayVideo{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  z-index:0;
+  display:none;
+}
+
+/* screens */
+.screen{position:fixed;top:0;left:0;width:100vw;height:100vh;display:none;justify-content:center;align-items:center;flex-direction:column;background-size:cover;background-position:center;}
+.active{display:flex;}
+
+/* backgrounds */
+#screen1{background-image:url("images/statue.png");}
+#screen2{}
+#screen3{background-image:url("images/Konoha.png");}
+#bookScreen{background-color:#111;}
+
+/* intro */
+#introText{font-size:2.5em;background:rgba(0,0,0,0.6);padding:20px;border-radius:20px;color:white;z-index:2;}
+
+/* countdown */
+#countdown{font-size:130px;color:#ff7b00;text-shadow:0 0 30px red,0 0 15px orange,2px 2px 5px #000;z-index:2;}
+
+/* fireworks */
+.firework{position:absolute;border-radius:50%;pointer-events:none;opacity:1;animation:fwFade 2s forwards;z-index:1;}
+@keyframes fwFade{0%{opacity:1;transform:scale(0.5);}50%{transform:scale(1.2);}100%{opacity:0;transform:scale(0);}}
+
+/* weapons */
+@keyframes fallRotate{0%{transform:translateY(-50px) rotate(0deg);}100%{transform:translateY(110vh) rotate(360deg);} }
+.weapon{position:absolute;pointer-events:none;animation-name:fallRotate;animation-timing-function:linear;animation-iteration-count:1;opacity:0.8;transition:opacity 1s ease;z-index:2;}
+
+/* gift screen */
+#screen3 h1{margin-bottom:40px;font-family:'Press Start 2P',cursive;font-size:2em;color:#ffbb00;text-shadow:1px 1px 3px black;}
+.menu{display:flex;gap:100px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
+.menu div{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  transition:transform 0.3s;
+  margin:0; 
+}
+.menu div:hover{transform:scale(1.1);}
+.menu img{
+  width:150px;
+  height:150px;
+  object-fit:cover;
+  border-radius:15px;
+  margin:0;
+  padding:0;
+  display:block;
+}
+.caption{font-family:'Press Start 2P',cursive;margin-top:10px;color:#ffbb00;font-size:0.9em;text-align:center;}
+
+#giftScreen h1{margin-bottom:20px;font-family:'Press Start 2P',cursive;color:#ffbb00;text-shadow:1px 1px 2px black;}
+textarea{width:80%;height:200px;margin-top:20px;padding:10px;font-family:Orbitron;}
+button{margin-top:20px;padding:10px 20px;background:orange;border:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- VIDEO BACKGROUND -->
+<video id="birthdayVideo" muted playsinline>
+  <source src="images/naruto.mp4" type="video/mp4">
+</video>
+
+<!-- YouTube OST with JS API -->
+<iframe id="bgMusic"
+    width="0"
+    height="0"
+    src="https://www.youtube.com/embed/uykcdQHYhP8?autoplay=1&loop=1&playlist=uykcdQHYhP8&controls=0&mute=1&enablejsapi=1"
+    allow="autoplay"
+    frameborder="0"
+    style="display:none;">
+</iframe>
+
+<!-- Intro -->
+<div id="screen1" class="screen active"><div id="introText"></div></div>
+
+<!-- Countdown -->
+<div id="screen2" class="screen"><div id="countdown">3</div></div>
+
+<!-- Gift Screen -->
+<div id="screen3" class="screen">
+  <h1>Here's your gift 🎁</h1>
+  <div class="menu">
+    <div onclick="openGift('letter')">
+      <img src="images/letter.png"><div class="caption">Letter</div>
+    </div>
+    <div onclick="openGift('cake')">
+      <img src="images/cake.png"><div class="caption">Cake</div>
+    </div>
+    <div onclick="openGift('flowers')">
+      <img src="images/flowers.png"><div class="caption">Flowers</div>
+    </div>
+  </div>
+</div>
+
+<!-- Gift Display -->
+<div id="giftScreen" class="screen">
+  <h1 id="giftTitle"></h1>
+  <textarea id="giftText" placeholder="Write your message here..."></textarea>
+  <button onclick="goMenu()">Back</button>
+</div>
+
+<script>
+const screen1=document.getElementById("screen1");
+const screen2=document.getElementById("screen2");
+const screen3=document.getElementById("screen3");
+const giftScreen=document.getElementById("giftScreen");
+const intro=document.getElementById("introText");
+const countdown=document.getElementById("countdown");
+const birthdayVideo=document.getElementById("birthdayVideo");
+const giftTitle=document.getElementById("giftTitle");
+const giftText=document.getElementById("giftText");
+
+/* Intro messages */
+const messages=["The Leaf Village sent me on a mission..","To deliver a secret message..","Happy birthday my love!!"];
+let i=0;
+function showIntro(){
+  if(i<messages.length){
+    intro.innerText=messages[i++];
+    setTimeout(showIntro,3500);
+  }else setTimeout(startCountdown,1500);
+}
+
+/* Countdown */
+let weaponInterval;
+const weaponImages=["images/kunai.png","images/shuriken.png"];
+function startCountdown(){
+  screen1.classList.remove("active");
+  screen2.classList.add("active");
+  spawnWeapons(6);
+  let n=3;
+  const timer=setInterval(()=>{
+    countdown.innerText=n>0?n:"";
+    n--;
+    if(n<0){
+      clearInterval(timer);
+      clearInterval(weaponInterval);
+      fadeOutWeapons(()=>{
+        showFireworks(()=>{
+          birthdayVideo.style.display="block";
+          birthdayVideo.play();
+          showBirthdayMessages();
+        });
+      });
+    }
+  },1000);
+}
+
+/* Weapons */
+function spawnWeapons(amount){
+  weaponInterval=setInterval(()=>{
+    for(let j=0;j<amount;j++){
+      const img=document.createElement("img");
+      img.classList.add("weapon");
+      img.src=weaponImages[Math.floor(Math.random()*weaponImages.length)];
+      img.style.left=Math.random()*100+"vw";
+      img.style.width=(Math.random()*20+35)+"px";
+      img.style.top="-50px";
+      img.style.animationDuration=(Math.random()*4+4)+"s";
+      img.style.transform=`rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(img);
+      setTimeout(()=>img.remove(),10000);
+    }
+  },300);
+}
+
+/* Fireworks */
+function showFireworks(callback){
+  const colors=["#ff0","#f0f","#0ff","#fff","#f90"];
+  let count=0; const bursts=40;
+  const fwInterval=setInterval(()=>{
+    const fw=document.createElement("div");
+    fw.className="firework";
+    fw.style.width=fw.style.height=(Math.random()*20+15)+"px";
+    fw.style.left=Math.random()*100+"vw";
+    fw.style.top=Math.random()*50+"vh";
+    fw.style.background=colors[Math.floor(Math.random()*colors.length)];
+    document.body.appendChild(fw);
+    setTimeout(()=>fw.remove(),2000);
+    count++;
+    if(count>=bursts){ clearInterval(fwInterval); callback(); }
+  },50);
+}
+
+/* Birthday messages */
+const bdayTexts=["HAPPY BIRTHDAY","YOUCEF","I LOVE YOU BABY","YOU ARE MY NINJA WAY 🤎"];
+function showBirthdayMessages(){
+  countdown.innerText="";
+  const msgDiv=document.createElement("div");
+  document.body.appendChild(msgDiv);
+  msgDiv.style.position="absolute";
+  msgDiv.style.top="40%";
+  msgDiv.style.width="100%";
+  msgDiv.style.textAlign="center";
+  msgDiv.style.fontSize="5em";
+  msgDiv.style.color="white";
+  msgDiv.style.textShadow="0 0 25px #f00,0 0 30px orange";
+
+  let idx=0;
+  const intervalTime = 3000; 
+  function showMsg(){
+    if(idx<bdayTexts.length){
+      msgDiv.innerText = bdayTexts[idx++];
+      setTimeout(showMsg, intervalTime);
+    }else{
+      msgDiv.remove();
+      birthdayVideo.pause();
+      birthdayVideo.style.display="none";
+      screen2.classList.remove("active");
+      screen3.classList.add("active");
+    }
+  }
+  showMsg();
+}
+
+/* fade out weapons */
+function fadeOutWeapons(callback){
+  const weapons=document.querySelectorAll(".weapon");
+  weapons.forEach(w=>w.style.opacity="0");
+  setTimeout(callback,1000);
+}
+
+/* Gift notes */
+const giftNotes={
+  letter:`Hey Youyou!
+The Leaf Village entrusted me with this secret scroll..
+This scroll isn’t just paper..it’s a secret mission straight from my heart!
+Decode my love carefully my ninja..
+Because every word here is like a kunai to your heart aimed straight to make you smile ♥️
+PS: you’re my favorite shinobi in this whole Leaf Village.`,
+  
+  cake:`Happy Birthday, my ninja!
+Even Naruto would fight off an Akatsuki for this cake… and so would I, for you! 🍰
+Every bite hits like a perfect taijutsu strike, melts your heart like a gentle genjutsu, and fills your soul with love stronger than any jutsu.
+Eat up and power up for another year of adventures together!`,
+
+  flowers:`These flowers may not have chakra, but my love for you certainly does 🌸
+They are rare as a Mangekyō Sharingan sighting!
+And just like every petal, my love for you grows stronger each day 💖
+Keep them close, my ninja way… and never forget you’re my ultimate mission.`
+};
+
+/* Open gift */
+function openGift(type){
+  screen3.classList.remove("active");
+  giftScreen.classList.add("active");
+  giftTitle.innerText = type.charAt(0).toUpperCase() + type.slice(1);
+  giftText.value = giftNotes[type];
+}
+
+/* Back to gift menu */
+function goMenu(){
+  giftScreen.classList.remove("active");
+  screen3.classList.add("active");
+}
+
+/* YouTube API for unmute on click */
+let player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('bgMusic');
+}
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
+
+let clicked=false;
+document.addEventListener('click',()=>{
+  if(!clicked && player && typeof player.unMute==='function'){
+    player.unMute();
+    clicked=true;
+  }
+});
+
+showIntro();
+</script>
+</body>
+</html>
